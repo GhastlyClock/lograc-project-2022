@@ -35,7 +35,6 @@ module Renaming where
         ren-v ρ `true = `true
         ren-v ρ `false = `false
         ren-v ρ (`λ M) = `λ (ren-c (exts-ren ρ) M)
-        -- ren-v ρ (`λ M) = `λ (ren-c {!   !}  M)
 
         ren-c : ∀ {Γ Γ' : Ctx} → ∀ {A : Ty} → Ren Γ Γ' → Γ ⊢ᶜ A → Γ' ⊢ᶜ A
         ren-c ρ (return V) = return (ren-v ρ V)
