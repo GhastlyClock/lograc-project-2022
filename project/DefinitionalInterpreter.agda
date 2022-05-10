@@ -6,8 +6,6 @@ open import Agda.Builtin.Unit
 
 open import FGCBV
 open import ESMonad
-
-open Monad ESMonad
      
 ⟦_⟧ᵗ : Ty → Set
 ⟦ unit ⟧ᵗ = ⊤

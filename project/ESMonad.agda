@@ -8,8 +8,6 @@ open import Agda.Builtin.Unit
 open import Data.List using (List; []; _∷_)
 open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_])
 open import Level renaming (zero to lzero; suc to lsuc; _⊔_ to _⊔ˡ_)
--- open import Categories.Category
--- open import Categories.Category.Instance.Sets
 
 import Relation.Binary.PropositionalEquality as Eq
 open Eq                  using (_≡_; refl; sym; trans; cong; cong₂; subst; [_]; inspect)
@@ -70,7 +68,7 @@ ESMonad = record
     ...           | inj₁ e = refl
     ...           | inj₂ y₁ = refl
 
-open Monad ESMonad
+open Monad ESMonad public
 
 put : {A : Set} → State → T A → T A
 put s f = λ _ → f s

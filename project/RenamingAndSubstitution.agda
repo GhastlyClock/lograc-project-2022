@@ -44,7 +44,7 @@ module Renaming where
         ren-c ρ (`get M) = `get (ren-c (exts-ren ρ) M)
         ren-c ρ (`put V W) = `put (ren-v ρ V) (ren-v ρ W)
 
-open Renaming
+open Renaming public
 
 
 module Substitution where
@@ -57,7 +57,6 @@ module Substitution where
     ext-sub :  ∀ {Γ Γ' A} → A ∈ Γ' → Sub Γ Γ' → Sub (Γ ,, A) Γ'
     ext-sub x ρ Z = var x
     ext-sub x ρ (S dokaz) = ρ dokaz
-
 
     exts-sub : ∀ {Γ Γ' A} → Sub Γ Γ' → Sub (Γ ,, A) (Γ' ,, A)
     exts-sub ρ Z = var Z
@@ -80,7 +79,7 @@ module Substitution where
         sub-c ρ (`get M) = `get (sub-c (exts-sub ρ) M)
         sub-c ρ (`put V W) = `put (sub-v ρ V) (sub-v ρ W)
 
-open Substitution
+open Substitution public
 
 enakost : ∀ {Γ Γ' : Ctx} → Ren Γ Γ'  → Sub Γ Γ'
 enakost dokaz = λ x → var (dokaz x)
