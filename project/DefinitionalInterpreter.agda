@@ -41,7 +41,6 @@ mutual
     ⟦_⟧ᶜ : {Γ : Ctx} {A : Ty} → Γ ⊢ᶜ A → ⟦ Γ ⟧ᵉ → T (⟦ A ⟧ᵗ)
     ⟦ return V ⟧ᶜ γ = η (⟦ V ⟧ᵛ γ)
     ⟦ `let M `in N ⟧ᶜ γ = λ s → letin-aux M N γ s
-    -- ⟦ `let V `in M ⟧ᶜ γ = ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ)
     ⟦ app V W ⟧ᶜ γ = ((⟦ V ⟧ᵛ γ) (⟦ W ⟧ᵛ γ))
     ⟦ `get M ⟧ᶜ γ = get λ s → ⟦ M ⟧ᶜ (γ , s)
     ⟦ `put V M ⟧ᶜ γ = put (⟦ V ⟧ᵛ γ) (⟦ M ⟧ᶜ γ)
