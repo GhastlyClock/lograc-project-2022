@@ -38,11 +38,12 @@ module Renaming where
 
         ren-c : ∀ {Γ Γ' : Ctx} → ∀ {A : Ty} → Ren Γ Γ' → Γ ⊢ᶜ A → Γ' ⊢ᶜ A
         ren-c ρ (return V) = return (ren-v ρ V)
-        ren-c ρ (`let V `in M) = `let (ren-v ρ V) `in ren-c (exts-ren ρ) M
+        ren-c ρ (`let M `in N) = `let ren-c ρ M `in ren-c (exts-ren ρ) N
+        -- ren-c ρ (`let M `in N) = `let ren-v ρ M `in ren-c (exts-ren ρ) N
         ren-c ρ (app V W) = app (ren-v ρ V) (ren-v ρ W)
         ren-c ρ (`raise E) = `raise E
         ren-c ρ (`get M) = `get (ren-c (exts-ren ρ) M)
-        ren-c ρ (`put V W) = `put (ren-v ρ V) (ren-v ρ W)
+        ren-c ρ (`put V M) = `put (ren-v ρ V) (ren-c ρ M)
 
 open Renaming public
 
@@ -73,11 +74,12 @@ module Substitution where
 
         sub-c : ∀ {Γ Γ' A} → Sub Γ Γ' → Γ ⊢ᶜ A → Γ' ⊢ᶜ A
         sub-c ρ (return V) = return (sub-v ρ V)
-        sub-c ρ (`let V `in M) = `let sub-v ρ V `in sub-c (exts-sub ρ) M
+        sub-c ρ (`let M `in N) = `let sub-c ρ M `in sub-c (exts-sub ρ) N
+        -- sub-c ρ (`let M `in N) = `let sub-v ρ M `in sub-c (exts-sub ρ) N
         sub-c ρ (app V W) = app (sub-v ρ V) (sub-v ρ W)
         sub-c ρ (`raise E) = `raise E
         sub-c ρ (`get M) = `get (sub-c (exts-sub ρ) M)
-        sub-c ρ (`put V W) = `put (sub-v ρ V) (sub-v ρ W)
+        sub-c ρ (`put V M) = `put (sub-v ρ V) (sub-c ρ M)
 
 open Substitution public
 
