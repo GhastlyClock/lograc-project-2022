@@ -4,12 +4,14 @@ open import Data.Bool using (true; false; Bool)
 open import Data.Product using (_×_; _,_; proj₁; proj₂)
 open import Agda.Builtin.Unit 
 
+open import Function
 
 open import Data.Sum using (_⊎_; inj₁; inj₂; [_,_])
 open import Data.Product using (_×_; _,_; proj₁; proj₂; Σ)
 
 open import FGCBV
 open import ESMonad
+open import RenamingAndSubstitution
 
 
 ⟦_⟧ᵗ : Ty → Set
@@ -50,3 +52,21 @@ mutual
     letin-aux M N γ s with (⟦ M ⟧ᶜ γ) s
     ... | inj₁ e = inj₁ e
     ... | inj₂ v = ⟦ N ⟧ᶜ (γ , proj₁ v) (proj₂ v)
+
+
+
+⟦_⟧ʳ : {Γ Γ' : Ctx} → Ren Γ Γ' → ⟦ Γ' ⟧ᵉ → ⟦ Γ ⟧ᵉ
+⟦_⟧ʳ {Γ = ∅} {Γ' = Γ'} ρ γ = tt
+⟦_⟧ʳ {Γ = Γ ,, A} {Γ' = Γ'} ρ γ = ⟦ ρ ∘ S ⟧ʳ γ , aux-proj-r γ (ρ Z)
+    where
+        aux-proj-r : {Γ : Ctx} → ⟦ Γ ⟧ᵉ → A ∈ Γ → ⟦ A ⟧ᵗ
+        aux-proj-r (fst , snd) Z = snd
+        aux-proj-r (fst , snd) (S p) = aux-proj-r fst p
+
+
+⟦_⟧ˢ : {Γ Γ' : Ctx} → Sub Γ Γ' → ⟦ Γ' ⟧ᵉ → ⟦ Γ ⟧ᵉ
+⟦_⟧ˢ {Γ = ∅} {Γ' = Γ'} σ γ = tt
+⟦_⟧ˢ {Γ = Γ ,, A} {Γ' = Γ'} σ γ = (⟦ σ ∘ S ⟧ˢ γ) , aux-proj-s γ (σ Z)
+    where
+        aux-proj-s : {Γ : Ctx} → ⟦ Γ ⟧ᵉ → Γ ⊢ᵛ A → ⟦ A ⟧ᵗ
+        aux-proj-s γ V = ⟦ V ⟧ᵛ γ
