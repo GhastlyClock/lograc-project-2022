@@ -57,11 +57,7 @@ mutual
 
 ⟦_⟧ʳ : {Γ Γ' : Ctx} → Ren Γ Γ' → ⟦ Γ' ⟧ᵉ → ⟦ Γ ⟧ᵉ
 ⟦_⟧ʳ {Γ = ∅} {Γ' = Γ'} ρ γ = tt
-⟦_⟧ʳ {Γ = Γ ,, A} {Γ' = Γ'} ρ γ = ⟦ ρ ∘ S ⟧ʳ γ , aux-proj-r γ (ρ Z)
-    where
-        aux-proj-r : {Γ : Ctx} → ⟦ Γ ⟧ᵉ → A ∈ Γ → ⟦ A ⟧ᵗ
-        aux-proj-r (fst , snd) Z = snd
-        aux-proj-r (fst , snd) (S p) = aux-proj-r fst p
+⟦_⟧ʳ {Γ = Γ ,, A} {Γ' = Γ'} ρ γ = ⟦ ρ ∘ S ⟧ʳ γ , var-aux (ρ Z) γ
 
 
 ⟦_⟧ˢ : {Γ Γ' : Ctx} → Sub Γ Γ' → ⟦ Γ' ⟧ᵉ → ⟦ Γ ⟧ᵉ
@@ -70,3 +66,4 @@ mutual
     where
         aux-proj-s : {Γ : Ctx} → ⟦ Γ ⟧ᵉ → Γ ⊢ᵛ A → ⟦ A ⟧ᵗ
         aux-proj-s γ V = ⟦ V ⟧ᵛ γ
+

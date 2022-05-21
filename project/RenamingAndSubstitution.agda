@@ -39,7 +39,6 @@ module Renaming where
         ren-c : ∀ {Γ Γ' : Ctx} → ∀ {A : Ty} → Ren Γ Γ' → Γ ⊢ᶜ A → Γ' ⊢ᶜ A
         ren-c ρ (return V) = return (ren-v ρ V)
         ren-c ρ (`let M `in N) = `let ren-c ρ M `in ren-c (exts-ren ρ) N
-        -- ren-c ρ (`let M `in N) = `let ren-v ρ M `in ren-c (exts-ren ρ) N
         ren-c ρ (app V W) = app (ren-v ρ V) (ren-v ρ W)
         ren-c ρ (`raise E) = `raise E
         ren-c ρ (`get M) = `get (ren-c (exts-ren ρ) M)
@@ -56,39 +55,38 @@ module Substitution where
     wk-sub dokaz = var (S dokaz)
 
     ext-sub :  ∀ {Γ Γ' A} → A ∈ Γ' → Sub Γ Γ' → Sub (Γ ,, A) Γ'
-    ext-sub x ρ Z = var x
-    ext-sub x ρ (S dokaz) = ρ dokaz
+    ext-sub x σ Z = var x
+    ext-sub x σ (S dokaz) = σ dokaz
 
     exts-sub : ∀ {Γ Γ' A} → Sub Γ Γ' → Sub (Γ ,, A) (Γ' ,, A)
-    exts-sub ρ Z = var Z
-    exts-sub ρ (S x) = ren-v wk-ren (ρ x)
+    exts-sub σ Z = var Z
+    exts-sub σ (S x) = ren-v wk-ren (σ x)
 
     mutual
         sub-v : ∀ {Γ Γ' A} → Sub Γ Γ' → Γ ⊢ᵛ A → Γ' ⊢ᵛ A
-        sub-v ρ (var x) = ρ x
-        sub-v ρ (const x) = const x
-        sub-v ρ ⋆ = ⋆
-        sub-v ρ `true = `true
-        sub-v ρ `false = `false
-        sub-v ρ (`λ M) = `λ (sub-c (exts-sub ρ) M)
+        sub-v σ (var x) = σ x
+        sub-v σ (const x) = const x
+        sub-v σ ⋆ = ⋆
+        sub-v σ `true = `true
+        sub-v σ `false = `false
+        sub-v σ (`λ M) = `λ (sub-c (exts-sub σ) M)
 
         sub-c : ∀ {Γ Γ' A} → Sub Γ Γ' → Γ ⊢ᶜ A → Γ' ⊢ᶜ A
-        sub-c ρ (return V) = return (sub-v ρ V)
-        sub-c ρ (`let M `in N) = `let sub-c ρ M `in sub-c (exts-sub ρ) N
-        -- sub-c ρ (`let M `in N) = `let sub-v ρ M `in sub-c (exts-sub ρ) N
-        sub-c ρ (app V W) = app (sub-v ρ V) (sub-v ρ W)
-        sub-c ρ (`raise E) = `raise E
-        sub-c ρ (`get M) = `get (sub-c (exts-sub ρ) M)
-        sub-c ρ (`put V M) = `put (sub-v ρ V) (sub-c ρ M)
+        sub-c σ (return V) = return (sub-v σ V)
+        sub-c σ (`let M `in N) = `let sub-c σ M `in sub-c (exts-sub σ) N
+        sub-c σ (app V W) = app (sub-v σ V) (sub-v σ W)
+        sub-c σ (`raise E) = `raise E
+        sub-c σ (`get M) = `get (sub-c (exts-sub σ) M)
+        sub-c σ (`put V M) = `put (sub-v σ V) (sub-c σ M)
 
 open Substitution public
 
-enakost : ∀ {Γ Γ' : Ctx} → Ren Γ Γ'  → Sub Γ Γ'
-enakost dokaz = λ x → var (dokaz x)
+enakost : ∀ {Γ Γ' : Ctx} → Ren Γ Γ' → Sub Γ Γ'
+enakost ρ = λ z → var (ρ z)
+
+σ-aux : ∀ {Γ B} → (V : Γ ⊢ᵛ B) → Sub (Γ ,, B) Γ
+σ-aux V Z = V
+σ-aux _ (S p) = var p
 
 _[_] : ∀ {Γ A B} → (Γ ,, B) ⊢ᶜ A → Γ ⊢ᵛ B → Γ ⊢ᶜ A
-_[_] {Γ} {B = B} M V = sub-c σ M
-  where
-    σ : ∀ {A : Ty} → A ∈ (Γ ,, B) → Γ ⊢ᵛ A
-    σ Z = V
-    σ (S x) = var x
+_[_] {Γ} {B = B} M V = sub-c (σ-aux V) M
