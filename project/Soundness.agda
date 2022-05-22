@@ -91,20 +91,67 @@ mutual
                                                                                         ⟦ M ⟧ᶜ (⟦ ρ ⟧ʳ γ' , a)
                                                                                         ∎)))
 
+
+-- ZELLOOOOOOOOOOOOOOOO NEDOKONČANO DELO
+
+-- Substitution
+var-aux-lemma-s : {Γ Γ' : Ctx} {A : Ty} → (γ' : ⟦ Γ' ⟧ᵉ) → (σ : Sub Γ Γ') → (x : A ∈ Γ) → ⟦ σ x ⟧ᵛ γ' `≡ var-aux x (⟦ σ ⟧ˢ γ')
+var-aux-lemma-s γ' σ Z = refl
+var-aux-lemma-s γ' σ (S x) = var-aux-lemma-s γ' (λ z → σ (S z)) x
+
+-- lemma-za-r : {Γ Γ' : Ctx} → (ρ : Ren Γ Γ') → (γ' : ⟦ Γ' ⟧ᵉ) → ∀ {A : Ty} {a : ⟦ A ⟧ᵗ} → ⟦ (λ x → S (ρ x)) ⟧ʳ (γ' , a) `≡ ⟦ ρ ⟧ʳ γ'
+-- lemma-za-r {Γ = ∅} ρ γ' = refl
+-- lemma-za-r {Γ = Γ ,, x} ρ γ' = cong (λ f → ( f , var-aux (ρ Z) γ' )) (lemma-za-r (λ z → ρ (S z)) γ')
+
+lemma-za-s : {Γ Γ' : Ctx} → (σ : Sub Γ Γ') → (γ : ⟦ Γ' ⟧ᵉ) → ∀ {A : Ty} {a : ⟦ A ⟧ᵗ} → ⟦ exts-sub σ ⟧ˢ (γ , a) `≡  (⟦ σ ⟧ˢ γ , a)
+lemma-za-s {Γ = ∅} σ γ = refl
+-- dokazujem: ((⟦ (λ x₁ → ren-v (λ p → S p) (σ (S x₁))) ⟧ˢ (γ , a) , ⟦ ren-v (λ p → S p) (σ Z) ⟧ᵛ (γ , a)) , a) `≡ ((⟦ (λ x₁ → σ (S x₁)) ⟧ˢ γ , ⟦ σ Z ⟧ᵛ γ) , a)
+lemma-za-s {Γ = Γ ,, x} σ γ {a = a} = cong₂ (λ f g → ((f , g) , a)) {!   !} {!   !}
 mutual
-    lemma-sub-c : {A : Ty} {Γ Γ' : Ctx} → (ρ : Sub Γ Γ') → (M : Γ ⊢ᶜ A) → ⟦ sub-c ρ M ⟧ᶜ `≡ (⟦ M ⟧ᶜ ∘ ⟦ ρ ⟧ˢ)
+    lemma-sub-c : {A : Ty} {Γ Γ' : Ctx} → (σ : Sub Γ Γ') → (M : Γ ⊢ᶜ A) → ⟦ sub-c σ M ⟧ᶜ `≡ (⟦ M ⟧ᶜ ∘ ⟦ σ ⟧ˢ)
     lemma-sub-c = {!   !}
 
 
-    lemma-sub-v : {A : Ty} {Γ Γ' : Ctx} → (ρ : Sub Γ Γ') → (V : Γ ⊢ᵛ A) → ⟦ sub-v ρ V ⟧ᵛ `≡ (⟦ V ⟧ᵛ ∘ ⟦ ρ ⟧ˢ)
-    lemma-sub-v = {!   !}
+    lemma-sub-v : {A : Ty} {Γ Γ' : Ctx} → (σ : Sub Γ Γ') → (V : Γ ⊢ᵛ A) → ⟦ sub-v σ V ⟧ᵛ `≡ (⟦ V ⟧ᵛ ∘ ⟦ σ ⟧ˢ)
+    lemma-sub-v σ (var x) = fun-ext (λ γ' → var-aux-lemma-s γ' σ x)
+    lemma-sub-v σ (const x) = refl
+    lemma-sub-v σ ⋆ = refl
+    lemma-sub-v σ `true = refl
+    lemma-sub-v σ `false = refl
+    -- ⟦ sub-c (exts-sub σ) M ⟧ᶜ (γ , a) `≡ ⟦ M ⟧ᶜ (⟦ σ ⟧ˢ γ , a)
+    lemma-sub-v {A = A} {Γ = Γ} {Γ' = Γ'} σ (`λ M) = fun-ext (λ γ → fun-ext (λ a → (begin
+                                                                                        ⟦ sub-c (exts-sub σ) M ⟧ᶜ (γ , a)
+                                                                                        ≡⟨ cong (λ f → f (γ , a)) (lemma-sub-c (exts-sub σ) M) ⟩
+                                                                                        ⟦ M ⟧ᶜ (⟦ exts-sub σ ⟧ˢ (γ , a))
+                                                                                        ≡⟨ {!   !} ⟩
+                                                                                        ⟦ M ⟧ᶜ (⟦ σ ⟧ˢ γ , a)
+                                                                                        ∎)))
 
 
 
+-- lemma-za-s : {Γ Γ' : Ctx} → (σ : Sub Γ Γ') → (γ' : ⟦ Γ' ⟧ᵉ) → ∀ {A : Ty} {a : ⟦ A ⟧ᵗ} → ⟦ (λ x → var (S x)) ⟧ˢ (γ' , a) `≡ γ'
+-- lemma-za-s {Γ = ∅} σ γ' = {!   !}
+-- lemma-za-s {Γ = Γ ,, x} σ γ' = {!   !}
+
+
+⟦var-id⟧ˢ-lemma : {Γ : Ctx} → (γ : ⟦ Γ ⟧ᵉ) → ⟦ (λ x → var x) ⟧ˢ γ `≡ γ
+⟦var-id⟧ˢ-lemma {Γ = ∅} γ = refl
+⟦var-id⟧ˢ-lemma {Γ = Γ ,, x} γ = 
+    -- dokazujem: (⟦ (λ x₁ → var (S x₁)) ⟧ˢ γ , proj₂ γ) `≡ γ
+    begin
+        (⟦ (λ x₁ → var (S x₁)) ⟧ˢ γ , proj₂ γ)
+        ≡⟨ {!   !} ⟩
+        {!   !}
+        ≡⟨ {!   !} ⟩
+        {!   !}
+
+
+
+------------------------------------------------------------------------------------------------------------
+        
 -----------------------------------------------------------------
 ------------ SOUNDNESS ------------------------------------------
 -----------------------------------------------------------------
-
 
 ⟦id⟧ʳ-lemma : {Γ : Ctx} → (γ : ⟦ Γ ⟧ᵉ) → ⟦ id ⟧ʳ γ `≡ γ
 ⟦id⟧ʳ-lemma {Γ = ∅} γ = refl
@@ -170,7 +217,14 @@ soundness raise-put = refl
 soundness raise-get = refl
 soundness raise-let = refl
 
-soundness return-left = fun-ext (λ γ → fun-ext (λ s → {!   !}))
+-- dokazujem : ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ) s `≡ ⟦ sub-c (σ-aux V) M ⟧ᶜ γ s
+soundness (return-left {V = V} {M = M}) = fun-ext (λ γ → fun-ext (λ s → sym (begin
+                                                                            ⟦ sub-c (σ-aux V) M ⟧ᶜ γ s
+                                                                            ≡⟨ cong (λ f → f γ s) (lemma-sub-c (σ-aux V) M) ⟩
+                                                                            (⟦ M ⟧ᶜ (⟦ σ-aux V ⟧ˢ γ)) s
+                                                                            ≡⟨ {!   !} ⟩
+                                                                            ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ) s
+                                                                            ∎)))
 
 soundness {Γ = Γ} {N = N} return-right = fun-ext (λ γ → fun-ext (λ s → return-right-aux γ s))
     where

@@ -81,8 +81,8 @@ module Substitution where
 
 open Substitution public
 
-enakost : ∀ {Γ Γ' : Ctx} → Ren Γ Γ' → Sub Γ Γ'
-enakost ρ = λ z → var (ρ z)
+lemma-ren-sub : ∀ {Γ Γ' : Ctx} → Ren Γ Γ' → Sub Γ Γ'
+lemma-ren-sub ρ = λ z → var (ρ z)
 
 σ-aux : ∀ {Γ B} → (V : Γ ⊢ᵛ B) → Sub (Γ ,, B) Γ
 σ-aux V Z = V
