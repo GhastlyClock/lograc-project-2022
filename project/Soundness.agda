@@ -21,17 +21,20 @@ open import ESMonad
 ----------------------------------------------------------------------------------------------------------
 -- Additional lemmas
 
-lemma-za-r : {Γ Γ' : Ctx} → (ρ : Ren Γ Γ') → (γ' : ⟦ Γ' ⟧ᵉ) → ∀ {A : Ty} {a : ⟦ A ⟧ᵗ} → ⟦ (λ x → S (ρ x)) ⟧ʳ (γ' , a) `≡ ⟦ ρ ⟧ʳ γ'
+lemma-za-r : {Γ Γ' : Ctx} → (ρ : Ren Γ Γ') → (γ' : ⟦ Γ' ⟧ᵉ) → ∀ {A : Ty} {a : ⟦ A ⟧ᵗ} → ⟦ S ∘ ρ ⟧ʳ (γ' , a) `≡ ⟦ ρ ⟧ʳ γ'
 lemma-za-r {Γ = ∅} ρ γ' = refl
+-- ⟦  S ∘ (ρ ∘ S) ⟧ʳ (γ' , a) `≡ ⟦ ρ ∘ S ⟧ʳ γ'
 lemma-za-r {Γ = Γ ,, x} ρ γ' = cong (λ f → ( f , var-aux (ρ Z) γ' )) (lemma-za-r (λ z → ρ (S z)) γ')
+
+-- lemma-za-s : {Γ Γ' : Ctx} → (σ : Sub Γ Γ') → (γ' : ⟦ Γ' ⟧ᵉ) → ∀ {A : Ty} {a : ⟦ A ⟧ᵗ} → ⟦ (var ∘ S) ∘ σ ⟧ˢ (γ' , a) `≡ ⟦ {! σ  !} ⟧ˢ γ'
 
 ⟦id⟧ʳ-lemma : {Γ : Ctx} → (γ : ⟦ Γ ⟧ᵉ) → ⟦ id ⟧ʳ γ `≡ γ
 ⟦id⟧ʳ-lemma {Γ = ∅} γ = refl
 ⟦id⟧ʳ-lemma {Γ = Γ ,, A} γ = 
     begin
-        (⟦ (λ x → id (S x)) ⟧ʳ γ , proj₂ γ)
+        (⟦ id ∘ S ⟧ʳ γ , proj₂ γ)
         ≡⟨ refl ⟩
-        (⟦ (λ x → S (id x)) ⟧ʳ γ , proj₂ γ)
+        (⟦ S ∘ id ⟧ʳ γ , proj₂ γ)
         ≡⟨ cong (λ f → (f , proj₂ γ)) (lemma-za-r id (proj₁ γ)) ⟩
         (⟦ id ⟧ʳ (proj₁ γ) , proj₂ γ)
         ≡⟨ cong (λ f → (f , proj₂ γ)) (⟦id⟧ʳ-lemma (proj₁ γ)) ⟩
@@ -122,29 +125,40 @@ mutual
 
 --------------------------------------------------------------------------------------------------------
 -- Substitution 
-
+-- 
 var-aux-lemma-s : {Γ Γ' : Ctx} {A : Ty} → (γ' : ⟦ Γ' ⟧ᵉ) → (σ : Sub Γ Γ') → (x : A ∈ Γ) → ⟦ σ x ⟧ᵛ γ' `≡ var-aux x (⟦ σ ⟧ˢ γ')
 var-aux-lemma-s γ' σ Z = refl
 var-aux-lemma-s γ' σ (S x) = var-aux-lemma-s γ' (λ z → σ (S z)) x
 
+⟦exts-sub∘S⟧ˢ-lemma : {Γ Γ' : Ctx} → ∀ {A : Ty} {a : ⟦ A ⟧ᵗ} → (σ : Sub Γ Γ') → (γ : ⟦ Γ' ⟧ᵉ) → ⟦ (exts-sub σ) ∘ S ⟧ˢ (γ , a) `≡ ⟦ σ ⟧ˢ γ
+⟦exts-sub∘S⟧ˢ-lemma {Γ = ∅} σ γ = refl
+⟦exts-sub∘S⟧ˢ-lemma {Γ = Γ ,, A} {a = a} σ γ = cong₂ (λ f g → f , g) (⟦exts-sub∘S⟧ˢ-lemma (λ z → σ (S z)) γ) aux
+    where
+        aux : ⟦ ren-v wk-ren (σ Z) ⟧ᵛ (γ , a) `≡ ⟦ σ Z ⟧ᵛ γ
+        aux = 
+            begin
+                ⟦ ren-v wk-ren (σ Z) ⟧ᵛ (γ , a)
+                ≡⟨ cong (λ f → f (γ , a)) (lemma-ren-v wk-ren (σ Z)) ⟩
+                ⟦ σ Z ⟧ᵛ (⟦ wk-ren ⟧ʳ (γ , a))
+                ≡⟨ cong (λ f → ⟦ σ Z ⟧ᵛ f) ⟦S⟧ʳ-lema ⟩
+                ⟦ σ Z ⟧ᵛ γ
+                ∎
+                
 ⟦var-id⟧ˢ-lemma : {Γ : Ctx} → (γ : ⟦ Γ ⟧ᵉ) → ⟦ var ⟧ˢ γ `≡ γ
 ⟦var-id⟧ˢ-lemma {Γ = ∅} γ = refl
 ⟦var-id⟧ˢ-lemma {Γ = Γ ,, x} γ = 
     -- dokazujem: (⟦ (λ x₁ → var (S x₁)) ⟧ˢ γ , proj₂ γ) `≡ γ
     begin
-        (⟦ (λ x₁ → var (S x₁)) ⟧ˢ γ , proj₂ γ)
-        ≡⟨ cong (λ f → (f , proj₂ γ)) {!   !} ⟩
-        (proj₁ γ , proj₂ γ)
-        ≡⟨ refl ⟩
+        (⟦ var ∘ S ⟧ˢ γ , proj₂ γ)
+        ≡⟨ cong (λ f → (f , proj₂ γ)) (⟦exts-sub∘S⟧ˢ-lemma var (proj₁ γ)) ⟩
+        ⟦ var ⟧ˢ (proj₁ γ) , proj₂ γ
+        ≡⟨ cong (λ f → (f , proj₂ γ)) (⟦var-id⟧ˢ-lemma (proj₁ γ)) ⟩
         γ
         ∎
 
-
--- ⟦ (λ x₁ → var (S x₁)) ⟧ˢ (fst , snd) `≡ fst
-        
 lemma-⟦exts-sub⟧ˢ : {Γ Γ' : Ctx} → (σ : Sub Γ Γ') → (γ : ⟦ Γ' ⟧ᵉ) → ∀ {A : Ty} {a : ⟦ A ⟧ᵗ} → ⟦ exts-sub σ ⟧ˢ (γ , a) `≡  (⟦ σ ⟧ˢ γ , a)
 lemma-⟦exts-sub⟧ˢ {Γ = ∅} σ γ = refl
-lemma-⟦exts-sub⟧ˢ {Γ = Γ ,, x} {Γ' = Γ'} σ γ {a = a} = cong₂ (λ f g → ((f , g) , a)) {! aux-1  !} (aux-1 (σ Z))
+lemma-⟦exts-sub⟧ˢ {Γ = Γ ,, x} {Γ' = Γ'} σ γ {a = a} = cong₂ (λ f g → ((f , g) , a)) (⟦exts-sub∘S⟧ˢ-lemma (λ z → σ (S z)) γ) (aux-1 (σ Z))
     where
         aux-1 : {A : Ty} → (V : Γ' ⊢ᵛ A) → ⟦ ren-v wk-ren V ⟧ᵛ (γ , a) `≡ ⟦ V ⟧ᵛ γ
         aux-1 V = 
@@ -155,15 +169,6 @@ lemma-⟦exts-sub⟧ˢ {Γ = Γ ,, x} {Γ' = Γ'} σ γ {a = a} = cong₂ (λ f 
                 ≡⟨ cong (λ f → ⟦ V ⟧ᵛ f) ⟦S⟧ʳ-lema ⟩
                 ⟦ V ⟧ᵛ γ
                 ∎
-        
-        aux-2 : ⟦ (λ x₁ → exts-sub σ (S (S x₁))) ⟧ˢ (γ , a) `≡ ⟦ (λ x₁ → σ (S x₁)) ⟧ˢ γ
-        aux-2 = 
-            begin
-                ⟦ (λ x₁ → exts-sub σ (S (S x₁))) ⟧ˢ (γ , a)
-                ≡⟨ {!   !} ⟩
-                {! ⟦ (exts-sub σ) ? ⟧ˢ (γ , a)  !}
-                ≡⟨ {!   !} ⟩
-                {!   !}
 
 
 mutual
