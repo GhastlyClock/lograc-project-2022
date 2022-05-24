@@ -4,12 +4,16 @@ import Relation.Binary.PropositionalEquality as Eq
 open Eq                  using (_≡_; refl; sym; trans; cong; cong₂; subst; [_]; inspect)
 open Eq.≡-Reasoning      using (begin_; _≡⟨⟩_; step-≡; _∎)
 
+open import Function using (id)
 
 open import FGCBV
 
 module Renaming where
     Ren : Ctx → Ctx → Set
     Ren Γ Γ' = ∀ {A : Ty} → A ∈ Γ → A ∈ Γ'
+
+    id-ren : {Γ : Ctx} → Ren Γ Γ
+    id-ren = id
 
     wk-ren : ∀ {Γ A} → Ren Γ (Γ ,, A)
     wk-ren p = S p
@@ -51,12 +55,15 @@ module Substitution where
     Sub : Ctx → Ctx → Set
     Sub Γ Γ' = ∀ {A} → A ∈ Γ → Γ' ⊢ᵛ A
 
+    id-sub : {Γ : Ctx} → Sub Γ Γ
+    id-sub = var 
+
     wk-sub : ∀ {Γ A} → Sub Γ (Γ ,, A)
     wk-sub dokaz = var (S dokaz)
 
-    ext-sub :  ∀ {Γ Γ' A} → A ∈ Γ' → Sub Γ Γ' → Sub (Γ ,, A) Γ'
-    ext-sub x σ Z = var x
-    ext-sub x σ (S dokaz) = σ dokaz
+    ext-sub :  ∀ {Γ Γ' A} → Sub Γ Γ' → Γ' ⊢ᵛ A → Sub (Γ ,, A) Γ'
+    ext-sub σ V Z = V
+    ext-sub σ V (S p) = σ p
 
     exts-sub : ∀ {Γ Γ' A} → Sub Γ Γ' → Sub (Γ ,, A) (Γ' ,, A)
     exts-sub σ Z = var Z

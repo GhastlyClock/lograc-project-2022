@@ -225,98 +225,180 @@ mutual
 -----------------------------------------------------------------
 ------------ SOUNDNESS ------------------------------------------
 -----------------------------------------------------------------
+mutual
+    soundness-c : {A : Ty} {Γ : Ctx} {M N : Γ ⊢ᶜ A} → Γ ⊢ᶜ M ≡ N → ⟦ M ⟧ᶜ `≡ ⟦ N ⟧ᶜ
 
-soundness : {A : Ty} {Γ : Ctx} {M N : Γ ⊢ᶜ A} → Γ ⊢ᶜ M ≡ N → ⟦ M ⟧ᶜ `≡ ⟦ N ⟧ᶜ
-soundness {Γ = Γ} (β-reduction {M = M} {V = V}) = fun-ext (λ γ → soundness-β-reduction-aux γ)
-    where
-        soundness-β-reduction-aux : (γ : ⟦ Γ ⟧ᵉ) → ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ) `≡ ⟦ sub-c (σ-aux V) M ⟧ᶜ γ
-        soundness-β-reduction-aux γ = sym (
-            begin
-                ⟦ sub-c (σ-aux V) M ⟧ᶜ γ
-                ≡⟨ cong (λ f → f γ) (lemma-sub-c (σ-aux V) M) ⟩
-                ⟦ M ⟧ᶜ (⟦ σ-aux V ⟧ˢ γ)
-                ≡⟨ cong (λ f →  ⟦ M ⟧ᶜ (f , ⟦ V ⟧ᵛ γ)) (⟦var-id⟧ˢ-lemma γ) ⟩
-                ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ)
-                ∎ )
+    soundness-c ≡-refl = refl
+    soundness-c (≡-symm p) = sym (soundness-c p)
+    soundness-c (≡-trans {M = M} {N = N} {O = O} p q) = 
+        begin
+            ⟦ M ⟧ᶜ
+            ≡⟨ soundness-c p ⟩
+            ⟦ N ⟧ᶜ
+            ≡⟨ soundness-c q ⟩
+            ⟦ O ⟧ᶜ
+            ∎
 
-soundness (let-put {V = V} {M = M} {N = N}) = refl
-soundness {A = A} {Γ = Γ} (let-get {A = B} {M = M} {N = N}) = fun-ext (λ γ → fun-ext (λ s → let-get-aux γ s))
-    where
-        let-get-aux : (γ : ⟦ Γ ⟧ᵉ) → (s : State) → ⟦ `let `get M `in N ⟧ᶜ γ s `≡ ⟦ `get (`let M `in ren-c (exts-ren wk-ren) N) ⟧ᶜ γ s
-        let-get-aux γ s with (⟦ M ⟧ᶜ (γ , s) s)
-        ... | inj₁ e = refl
-        -- dokzaujem : ⟦ ren-c (exts-ren S) N ⟧ᶜ ((γ , s) , proj₁ v) (proj₂ v) `≡ ⟦ N ⟧ᶜ (γ , proj₁ v) (proj₂ v)
-        ... | inj₂ v = sym (begin
-                                ⟦ ren-c (exts-ren S) N ⟧ᶜ ((γ , s) , proj₁ v) (proj₂ v)
-                                ≡⟨ cong (λ f → f ((γ , s) , proj₁ v) (proj₂ v)) (lemma-ren-c (exts-ren S) N) ⟩
-                                (⟦ N ⟧ᶜ ((⟦ exts-ren S ⟧ʳ) ((γ , s) , proj₁ v))) (proj₂ v)
-                                -- uporabil sem pravilo: ⟦ (λ x → S (ρ x)) ⟧ʳ (γ' , a) `≡ ⟦ ρ ⟧ʳ γ'
-                                -- dokazujem : ⟦ N ⟧ᶜ (⟦ (λ x → S (S x)) ⟧ʳ ((γ , s) , proj₁ v) , proj₁ v) (proj₂ v)
-                                ≡⟨ cong (λ f → ⟦ N ⟧ᶜ (f , proj₁ v) (proj₂ v)) (lemma-za-r S (γ , s)) ⟩
-                                ⟦ N ⟧ᶜ (⟦ S ⟧ʳ (γ , s) , proj₁ v) (proj₂ v)
-                                ≡⟨ cong (λ f → ⟦ N ⟧ᶜ (f , proj₁ v) (proj₂ v)) ⟦S⟧ʳ-lema ⟩
-                                ⟦ N ⟧ᶜ (γ , proj₁ v) (proj₂ v)
-                                ∎)
-                                
-soundness {Γ = Γ} (put-get {V = V} {M = M}) = fun-ext (λ γ → fun-ext (λ _ → cong (λ f → f (⟦ V ⟧ᵛ γ)) (soundness-put-get-aux γ)))
-    where
-        soundness-put-get-aux : (γ : ⟦ Γ ⟧ᵉ) → ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ) `≡ ⟦ sub-c (σ-aux V) M ⟧ᶜ γ
-        soundness-put-get-aux γ = sym ( 
-            begin
-                ⟦ sub-c (σ-aux V) M ⟧ᶜ γ
-                ≡⟨ cong (λ f → f γ) (lemma-sub-c (σ-aux V) M) ⟩
-                ⟦ M ⟧ᶜ ( ⟦ σ-aux V ⟧ˢ γ )
-                ≡⟨ cong (λ f → ⟦ M ⟧ᶜ (f , ⟦ V ⟧ᵛ γ)) (⟦var-id⟧ˢ-lemma γ) ⟩
-                ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ)
-                ∎) 
+    soundness-c (cong-app p q) = fun-ext (λ γ → cong₂ (λ f g → (f γ) (g γ)) (soundness-v p) (soundness-v q))
+    
+    soundness-c {Γ = Γ} (cong-letin {M = M} {M' = M'} {N = N} {N' = N'} p q) = fun-ext (λ γ → fun-ext (λ s → soundness-c-cong-letin-aux γ s))
+        where
+            soundness-c-cong-letin-aux : (γ : ⟦ Γ ⟧ᵉ) → (s : State) →  ⟦ `let M `in N ⟧ᶜ γ s `≡ ⟦ `let M' `in N' ⟧ᶜ γ s
+            soundness-c-cong-letin-aux γ s rewrite soundness-c p with ⟦ M' ⟧ᶜ γ s
+            ... | inj₁ e = refl
+            ... | inj₂ v = cong (λ f → f (γ , proj₁ v) (proj₂ v)) (soundness-c q)
+    
+    soundness-c (cong-return p) = cong (λ f → (λ γ s → inj₂ (f γ , s))) (soundness-v p)
 
-soundness (GET {M = M})  = fun-ext (λ γ → fun-ext (λ s → cong (λ f → f s) (begin
-                                                                            ⟦ ren-c S M ⟧ᶜ (γ , s)
-                                                                            ≡⟨ cong (λ f → f (γ , s)) (lemma-ren-c S M) ⟩
-                                                                            (⟦ M ⟧ᶜ ∘ ⟦ S ⟧ʳ) (γ , s)
-                                                                            ≡⟨ cong (λ f → ⟦ M ⟧ᶜ f) ⟦S⟧ʳ-lema ⟩
-                                                                            ⟦ M ⟧ᶜ γ
-                                                                            ∎)))
 
-soundness put-put = refl
-soundness raise-put = refl
-soundness raise-get = refl
-soundness raise-let = refl
+    soundness-c {Γ = Γ} (β-`λ {M = M} {V = V}) = fun-ext (λ γ → soundness-β-`λ-aux γ)
+        where
+            soundness-β-`λ-aux : (γ : ⟦ Γ ⟧ᵉ) → ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ) `≡ ⟦ sub-c (σ-aux V) M ⟧ᶜ γ
+            soundness-β-`λ-aux γ = sym (
+                begin
+                    ⟦ sub-c (σ-aux V) M ⟧ᶜ γ
+                    ≡⟨ cong (λ f → f γ) (lemma-sub-c (σ-aux V) M) ⟩
+                    ⟦ M ⟧ᶜ (⟦ σ-aux V ⟧ˢ γ)
+                    ≡⟨ cong (λ f →  ⟦ M ⟧ᶜ (f , ⟦ V ⟧ᵛ γ)) (⟦var-id⟧ˢ-lemma γ) ⟩
+                    ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ)
+                    ∎ )
+    
+    soundness-c (β-letin {V = V} {M = M}) = fun-ext (λ γ → fun-ext (λ s → sym (
+        begin
+            ⟦ sub-c (σ-aux V) M ⟧ᶜ γ s 
+            ≡⟨ cong (λ f → f γ s) (lemma-sub-c (σ-aux V) M) ⟩
+            ⟦ M ⟧ᶜ (⟦ σ-aux V ⟧ˢ γ) s
+            ≡⟨ cong (λ f → ⟦ M ⟧ᶜ (f , ⟦ V ⟧ᵛ γ) s) (⟦var-id⟧ˢ-lemma γ) ⟩
+            ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ) s
+            ∎
+        )))
 
-soundness (return-left {V = V} {M = M}) = fun-ext (λ γ → fun-ext (λ s → sym (begin
-                                                                            ⟦ sub-c (σ-aux V) M ⟧ᶜ γ s
-                                                                            ≡⟨ cong (λ f → f γ s) (lemma-sub-c (σ-aux V) M) ⟩
-                                                                            (⟦ M ⟧ᶜ (⟦ σ-aux V ⟧ˢ γ)) s
-                                                                            ≡⟨ cong (λ f →  ⟦ M ⟧ᶜ (f , ⟦ V ⟧ᵛ γ) s) (⟦var-id⟧ˢ-lemma γ) ⟩
-                                                                            ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ) s
-                                                                            ∎)))
+    soundness-c {Γ = Γ} (η-letin {M = M}) = fun-ext (λ γ → fun-ext (λ s → soundness-c-η-letin-aux γ s))
+        where
+            soundness-c-η-letin-aux : (γ : ⟦ Γ ⟧ᵉ) → (s : State) → ⟦ M ⟧ᶜ γ s `≡ ⟦ `let M `in return (var Z) ⟧ᶜ γ s
+            soundness-c-η-letin-aux γ s with ⟦ M ⟧ᶜ γ s
+            ... | inj₁ e = refl
+            ... | inj₂ v = refl
+            
+    soundness-c {A = A} {Γ = Γ} (let-assoc {A = B} {B = C} {M = M} {N = N} {O = O}) = fun-ext (λ γ → fun-ext (λ s → let-assoc-aux γ s))
+        where
+            let-assoc-aux : (γ : ⟦ Γ ⟧ᵉ) → (s : State) →  letin-aux (`let M `in N) O γ s `≡ letin-aux M (`let N `in ren-c (exts-ren S) O) γ s
+            let-assoc-aux γ s with (⟦ M ⟧ᶜ γ s)
+            ... | inj₁ e = refl
+            ... | inj₂ v with (⟦ N ⟧ᶜ (γ , proj₁ v) (proj₂ v))
+            ...             | inj₁ e' = refl
+            -- ⟦ O ⟧ᶜ (γ , proj₁ v') (proj₂ v') `≡ ⟦ ren-c (exts-ren S) O ⟧ᶜ ((γ , proj₁ v) , proj₁ v') (proj₂ v')
+            ...             | inj₂ v' = sym (begin
+                                                ⟦ ren-c (exts-ren S) O ⟧ᶜ ((γ , proj₁ v) , proj₁ v') (proj₂ v')
+                                                ≡⟨ cong (λ f → f ((γ , proj₁ v) , proj₁ v') (proj₂ v')) (lemma-ren-c (exts-ren S) O) ⟩
+                                                (⟦ O ⟧ᶜ (⟦ exts-ren S ⟧ʳ ((γ , proj₁ v) , proj₁ v'))) (proj₂ v')
+                                                -- uporabil sem pravilo: ⟦ (λ x → S (ρ x)) ⟧ʳ (γ' , a) `≡ ⟦ ρ ⟧ʳ γ'
+                                                -- dokazujem : ⟦ O ⟧ᶜ (⟦ (λ x → S (S x)) ⟧ʳ ((γ , proj₁ v) , proj₁ v') , proj₁ v') (proj₂ v')
+                                                ≡⟨ cong (λ f →  (⟦ O ⟧ᶜ (f , proj₁ v') ) (proj₂ v')) (lemma-za-r S ((γ , proj₁ v))) ⟩
+                                                (⟦ O ⟧ᶜ ( ⟦ S ⟧ʳ (γ , proj₁ v) , proj₁ v') ) (proj₂ v')
+                                                -- uporabil pravilo: ⟦ S ⟧ʳ (γ , a) `≡ γ
+                                                ≡⟨ cong (λ f → (⟦ O ⟧ᶜ (f , proj₁ v') ) (proj₂ v')) ⟦S⟧ʳ-lema ⟩
+                                                (⟦ O ⟧ᶜ (γ , proj₁ v') ) (proj₂ v')
+                                                ≡⟨ refl ⟩
+                                                ⟦ O ⟧ᶜ (γ , proj₁ v') (proj₂ v')
+                                                ∎)
+        
+    soundness-c (let-put {V = V} {M = M} {N = N}) = refl
+    soundness-c {A = A} {Γ = Γ} (let-get {A = B} {M = M} {N = N}) = fun-ext (λ γ → fun-ext (λ s → let-get-aux γ s))
+        where
+            let-get-aux : (γ : ⟦ Γ ⟧ᵉ) → (s : State) → ⟦ `let `get M `in N ⟧ᶜ γ s `≡ ⟦ `get (`let M `in ren-c (exts-ren wk-ren) N) ⟧ᶜ γ s
+            let-get-aux γ s with (⟦ M ⟧ᶜ (γ , s) s)
+            ... | inj₁ e = refl
+            -- dokzaujem : ⟦ ren-c (exts-ren S) N ⟧ᶜ ((γ , s) , proj₁ v) (proj₂ v) `≡ ⟦ N ⟧ᶜ (γ , proj₁ v) (proj₂ v)
+            ... | inj₂ v = sym (begin
+                                    ⟦ ren-c (exts-ren S) N ⟧ᶜ ((γ , s) , proj₁ v) (proj₂ v)
+                                    ≡⟨ cong (λ f → f ((γ , s) , proj₁ v) (proj₂ v)) (lemma-ren-c (exts-ren S) N) ⟩
+                                    (⟦ N ⟧ᶜ ((⟦ exts-ren S ⟧ʳ) ((γ , s) , proj₁ v))) (proj₂ v)
+                                    -- uporabil sem pravilo: ⟦ (λ x → S (ρ x)) ⟧ʳ (γ' , a) `≡ ⟦ ρ ⟧ʳ γ'
+                                    -- dokazujem : ⟦ N ⟧ᶜ (⟦ (λ x → S (S x)) ⟧ʳ ((γ , s) , proj₁ v) , proj₁ v) (proj₂ v)
+                                    ≡⟨ cong (λ f → ⟦ N ⟧ᶜ (f , proj₁ v) (proj₂ v)) (lemma-za-r S (γ , s)) ⟩
+                                    ⟦ N ⟧ᶜ (⟦ S ⟧ʳ (γ , s) , proj₁ v) (proj₂ v)
+                                    ≡⟨ cong (λ f → ⟦ N ⟧ᶜ (f , proj₁ v) (proj₂ v)) ⟦S⟧ʳ-lema ⟩
+                                    ⟦ N ⟧ᶜ (γ , proj₁ v) (proj₂ v)
+                                    ∎)
+                                    
+    soundness-c {Γ = Γ} (put-get {V = V} {M = M}) = fun-ext (λ γ → fun-ext (λ _ → cong (λ f → f (⟦ V ⟧ᵛ γ)) (soundness-put-get-aux γ)))
+        where
+            soundness-put-get-aux : (γ : ⟦ Γ ⟧ᵉ) → ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ) `≡ ⟦ sub-c (σ-aux V) M ⟧ᶜ γ
+            soundness-put-get-aux γ = sym ( 
+                begin
+                    ⟦ sub-c (σ-aux V) M ⟧ᶜ γ
+                    ≡⟨ cong (λ f → f γ) (lemma-sub-c (σ-aux V) M) ⟩
+                    ⟦ M ⟧ᶜ ( ⟦ σ-aux V ⟧ˢ γ )
+                    ≡⟨ cong (λ f → ⟦ M ⟧ᶜ (f , ⟦ V ⟧ᵛ γ)) (⟦var-id⟧ˢ-lemma γ) ⟩
+                    ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ)
+                    ∎) 
 
-soundness {Γ = Γ} {N = N} return-right = fun-ext (λ γ → fun-ext (λ s → return-right-aux γ s))
-    where
-        return-right-aux : (γ : ⟦ Γ ⟧ᵉ) → (s : State) → letin-aux N (return (var Z)) γ s `≡ ⟦ N ⟧ᶜ γ s
-        return-right-aux γ s with ⟦ N ⟧ᶜ γ s
-        ... | inj₁ e = refl
-        ... | inj₂ v = refl
+    soundness-c (GET {M = M})  = fun-ext (λ γ → fun-ext (λ s → cong (λ f → f s) (begin
+                                                                                ⟦ ren-c S M ⟧ᶜ (γ , s)
+                                                                                ≡⟨ cong (λ f → f (γ , s)) (lemma-ren-c S M) ⟩
+                                                                                (⟦ M ⟧ᶜ ∘ ⟦ S ⟧ʳ) (γ , s)
+                                                                                ≡⟨ cong (λ f → ⟦ M ⟧ᶜ f) ⟦S⟧ʳ-lema ⟩
+                                                                                ⟦ M ⟧ᶜ γ
+                                                                                ∎)))
 
-soundness {A = A} {Γ = Γ} (let-assoc {A = B} {B = C} {M = M} {N = N} {O = O}) = fun-ext (λ γ → fun-ext (λ s → let-assoc-aux γ s))
-    where
-        let-assoc-aux : (γ : ⟦ Γ ⟧ᵉ) → (s : State) →  letin-aux (`let M `in N) O γ s `≡ letin-aux M (`let N `in ren-c (exts-ren S) O) γ s
-        let-assoc-aux γ s with (⟦ M ⟧ᶜ γ s)
-        ... | inj₁ e = refl
-        ... | inj₂ v with (⟦ N ⟧ᶜ (γ , proj₁ v) (proj₂ v))
-        ...             | inj₁ e' = refl
-        -- ⟦ O ⟧ᶜ (γ , proj₁ v') (proj₂ v') `≡ ⟦ ren-c (exts-ren S) O ⟧ᶜ ((γ , proj₁ v) , proj₁ v') (proj₂ v')
-        ...             | inj₂ v' = sym (begin
-                                            ⟦ ren-c (exts-ren S) O ⟧ᶜ ((γ , proj₁ v) , proj₁ v') (proj₂ v')
-                                            ≡⟨ cong (λ f → f ((γ , proj₁ v) , proj₁ v') (proj₂ v')) (lemma-ren-c (exts-ren S) O) ⟩
-                                            (⟦ O ⟧ᶜ (⟦ exts-ren S ⟧ʳ ((γ , proj₁ v) , proj₁ v'))) (proj₂ v')
-                                            -- uporabil sem pravilo: ⟦ (λ x → S (ρ x)) ⟧ʳ (γ' , a) `≡ ⟦ ρ ⟧ʳ γ'
-                                            -- dokazujem : ⟦ O ⟧ᶜ (⟦ (λ x → S (S x)) ⟧ʳ ((γ , proj₁ v) , proj₁ v') , proj₁ v') (proj₂ v')
-                                            ≡⟨ cong (λ f →  (⟦ O ⟧ᶜ (f , proj₁ v') ) (proj₂ v')) (lemma-za-r S ((γ , proj₁ v))) ⟩
-                                            (⟦ O ⟧ᶜ ( ⟦ S ⟧ʳ (γ , proj₁ v) , proj₁ v') ) (proj₂ v')
-                                            -- uporabil pravilo: ⟦ S ⟧ʳ (γ , a) `≡ γ
-                                            ≡⟨ cong (λ f → (⟦ O ⟧ᶜ (f , proj₁ v') ) (proj₂ v')) ⟦S⟧ʳ-lema ⟩
-                                            (⟦ O ⟧ᶜ (γ , proj₁ v') ) (proj₂ v')
-                                            ≡⟨ refl ⟩
-                                            ⟦ O ⟧ᶜ (γ , proj₁ v') (proj₂ v')
-                                            ∎)   
+
+    soundness-c put-put = refl
+    soundness-c raise-put = refl
+    soundness-c raise-get = refl
+    soundness-c raise-let = refl
+
+    -- soundness-c (return-left {V = V} {M = M}) = fun-ext (λ γ → fun-ext (λ s → sym (begin
+    --                                                                             ⟦ sub-c (σ-aux V) M ⟧ᶜ γ s
+    --                                                                             ≡⟨ cong (λ f → f γ s) (lemma-sub-c (σ-aux V) M) ⟩
+    --                                                                             (⟦ M ⟧ᶜ (⟦ σ-aux V ⟧ˢ γ)) s
+    --                                                                             ≡⟨ cong (λ f →  ⟦ M ⟧ᶜ (f , ⟦ V ⟧ᵛ γ) s) (⟦var-id⟧ˢ-lemma γ) ⟩
+    --                                                                             ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ) s
+    --                                                                             ∎)))
+
+    -- soundness-c {Γ = Γ} {N = N} return-right = fun-ext (λ γ → fun-ext (λ s → return-right-aux γ s))
+    --     where
+    --         return-right-aux : (γ : ⟦ Γ ⟧ᵉ) → (s : State) → letin-aux N (return (var Z)) γ s `≡ ⟦ N ⟧ᶜ γ s
+    --         return-right-aux γ s with ⟦ N ⟧ᶜ γ s
+    --         ... | inj₁ e = refl
+    --         ... | inj₂ v = refl
+
+
+    
+
+
+
+
+    soundness-v : {A : Ty} {Γ : Ctx} {V W : Γ ⊢ᵛ A} → Γ ⊢ᵛ V ≡ W → ⟦ V ⟧ᵛ `≡ ⟦ W ⟧ᵛ
+
+    soundness-v ≡-refl = refl
+    soundness-v (≡-symm p) = sym (soundness-v p)
+    soundness-v (≡-trans {V = V} {W = W} {U = U} p q) = 
+        begin
+            ⟦ V ⟧ᵛ
+            ≡⟨ soundness-v p ⟩
+            ⟦ W ⟧ᵛ
+            ≡⟨ soundness-v q ⟩
+            ⟦ U ⟧ᵛ
+            ∎
+            
+    soundness-v (cong-`λ p) = fun-ext (λ γ → fun-ext (λ a → cong (λ f → f (γ , a)) (soundness-c p)))
+
+
+    soundness-v η-⋆ = fun-ext (λ γ → refl)
+
+    soundness-v {Γ = Γ} (η-`λ {A = A} {V = V}) = fun-ext (λ γ → fun-ext (λ a → cong (λ f → f a) (soundness-v-η-reduction-aux γ a)))
+        where
+            soundness-v-η-reduction-aux : (γ : ⟦ Γ ⟧ᵉ) → (a : ⟦ A ⟧ᵗ) → ⟦ V ⟧ᵛ γ `≡ ⟦ sub-v wk-sub V ⟧ᵛ (γ , a)
+            soundness-v-η-reduction-aux γ a = sym (
+                begin
+                    ⟦ sub-v wk-sub V ⟧ᵛ (γ , a)
+                    ≡⟨ cong (λ f → f (γ , a)) (lemma-sub-v wk-sub V) ⟩
+                    ⟦ V ⟧ᵛ (⟦ var ∘ S ⟧ˢ (γ , a))
+                    ≡⟨ cong (λ f → ⟦ V ⟧ᵛ f) (⟦exts-sub∘S⟧ˢ-lemma var γ) ⟩
+                    ⟦ V ⟧ᵛ (⟦ var ⟧ˢ γ)
+                    ≡⟨ cong (λ f → ⟦ V ⟧ᵛ f) (⟦var-id⟧ˢ-lemma γ) ⟩
+                    ⟦ V ⟧ᵛ γ
+                    ∎
+                )
+                
