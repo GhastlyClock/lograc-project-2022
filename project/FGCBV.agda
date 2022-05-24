@@ -28,12 +28,12 @@ data _∈_ : Ty → Ctx → Set where
 mutual
   -- Judgements for values
   data _⊢ᵛ_ : Ctx → Ty → Set where
-    var : {Γ : Ctx} {A : Ty} →                    -- variable
+    var : {Γ : Ctx} {A : Ty} → 
       A ∈ Γ → 
       -------
       Γ ⊢ᵛ A
     
-    const : {Γ : Ctx} →                           -- every s ∈ State is a value of Ty TState
+    const : {Γ : Ctx} →
       State → 
       -------
       Γ ⊢ᵛ TState

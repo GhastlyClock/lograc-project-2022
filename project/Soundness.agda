@@ -254,23 +254,23 @@ mutual
     soundness-c (cong-return p) = cong (λ f → (λ γ s → inj₂ (f γ , s))) (soundness-v p)
 
 
-    soundness-c {Γ = Γ} (β-`λ {M = M} {V = V}) = fun-ext (λ γ → soundness-β-`λ-aux γ)
+    soundness-c {Γ = Γ} (β-`λ {M = M} {V = V}) = fun-ext soundness-β-`λ-aux
         where
-            soundness-β-`λ-aux : (γ : ⟦ Γ ⟧ᵉ) → ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ) `≡ ⟦ sub-c (σ-aux V) M ⟧ᶜ γ
+            soundness-β-`λ-aux : (γ : ⟦ Γ ⟧ᵉ) → ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ) `≡ ⟦ sub-c (ext-sub var V) M ⟧ᶜ γ
             soundness-β-`λ-aux γ = sym (
                 begin
-                    ⟦ sub-c (σ-aux V) M ⟧ᶜ γ
-                    ≡⟨ cong (λ f → f γ) (lemma-sub-c (σ-aux V) M) ⟩
-                    ⟦ M ⟧ᶜ (⟦ σ-aux V ⟧ˢ γ)
+                    ⟦ sub-c (ext-sub var V) M ⟧ᶜ γ
+                    ≡⟨ cong (λ f → f γ) (lemma-sub-c (ext-sub var V) M) ⟩
+                    ⟦ M ⟧ᶜ (⟦ var ⟧ˢ γ , ⟦ V ⟧ᵛ γ)
                     ≡⟨ cong (λ f →  ⟦ M ⟧ᶜ (f , ⟦ V ⟧ᵛ γ)) (⟦var⟧ˢ≡id-lemma γ) ⟩
                     ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ)
                     ∎ )
     
     soundness-c (β-letin {V = V} {M = M}) = fun-ext (λ γ → fun-ext (λ s → sym (
         begin
-            ⟦ sub-c (σ-aux V) M ⟧ᶜ γ s 
-            ≡⟨ cong (λ f → f γ s) (lemma-sub-c (σ-aux V) M) ⟩
-            ⟦ M ⟧ᶜ (⟦ σ-aux V ⟧ˢ γ) s
+            ⟦ sub-c (ext-sub var V) M ⟧ᶜ γ s 
+            ≡⟨ cong (λ f → f γ s) (lemma-sub-c (ext-sub var V) M) ⟩
+            ⟦ M ⟧ᶜ (⟦ ext-sub var V ⟧ˢ γ) s
             ≡⟨ cong (λ f → ⟦ M ⟧ᶜ (f , ⟦ V ⟧ᵛ γ) s) (⟦var⟧ˢ≡id-lemma γ) ⟩
             ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ) s
             ∎
@@ -320,12 +320,12 @@ mutual
                                     
     soundness-c {Γ = Γ} (put-get {V = V} {M = M}) = fun-ext (λ γ → fun-ext (λ _ → cong (λ f → f (⟦ V ⟧ᵛ γ)) (soundness-put-get-aux γ)))
         where
-            soundness-put-get-aux : (γ : ⟦ Γ ⟧ᵉ) → ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ) `≡ ⟦ sub-c (σ-aux V) M ⟧ᶜ γ
+            soundness-put-get-aux : (γ : ⟦ Γ ⟧ᵉ) → ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ) `≡ ⟦ sub-c (ext-sub var V) M ⟧ᶜ γ
             soundness-put-get-aux γ = sym ( 
                 begin
-                    ⟦ sub-c (σ-aux V) M ⟧ᶜ γ
-                    ≡⟨ cong (λ f → f γ) (lemma-sub-c (σ-aux V) M) ⟩
-                    ⟦ M ⟧ᶜ ( ⟦ σ-aux V ⟧ˢ γ )
+                    ⟦ sub-c (ext-sub var V) M ⟧ᶜ γ
+                    ≡⟨ cong (λ f → f γ) (lemma-sub-c (ext-sub var V) M) ⟩
+                    ⟦ M ⟧ᶜ ( ⟦ ext-sub var V ⟧ˢ γ )
                     ≡⟨ cong (λ f → ⟦ M ⟧ᶜ (f , ⟦ V ⟧ᵛ γ)) (⟦var⟧ˢ≡id-lemma γ) ⟩
                     ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ)
                     ∎) 

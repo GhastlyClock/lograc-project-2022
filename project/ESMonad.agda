@@ -17,7 +17,7 @@ open import Axiom.Extensionality.Propositional using (Extensionality)
 
 postulate fun-ext : ∀ {a b} → Extensionality a b
 
-postulate     -- Think of it as some universal set of states
+postulate
   State : Set₀
   Exceptions : Set₀
 
