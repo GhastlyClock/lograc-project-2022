@@ -18,9 +18,9 @@ module Renaming where
     wk-ren : ∀ {Γ A} → Ren Γ (Γ ,, A)
     wk-ren p = S p
 
-    ext-ren : ∀ {Γ Γ' A} → A ∈ Γ' → Ren Γ Γ' → Ren (Γ ,, A) Γ'
-    ext-ren x ρ Z = x
-    ext-ren x ρ (S dokaz) = ρ dokaz
+    ext-ren : ∀ {Γ Γ' A} → Ren Γ Γ' → A ∈ Γ' → Ren (Γ ,, A) Γ'
+    ext-ren ρ p Z = p
+    ext-ren ρ p (S dokaz) = ρ dokaz
 
     exc-ren : ∀ {Γ A B} → Ren ((Γ ,, A) ,, B)  ((Γ ,, B) ,, A)
     exc-ren Z = S Z

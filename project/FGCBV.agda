@@ -3,7 +3,7 @@ module FGCBV where
 open import ESMonad using (State; Exceptions)
 
 
--- Types of `λbda calculus:
+-- Types of lambda calculus:
 data Ty : Set where
     unit : Ty                -- unit
     bool : Ty                -- bool   

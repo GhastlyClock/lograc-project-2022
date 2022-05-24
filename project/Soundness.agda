@@ -18,15 +18,18 @@ open import FGCBV
 open import RenamingAndSubstitution
 open import ESMonad
 
-----------------------------------------------------------------------------------------------------------
--- Additional lemmas
+---------------------------------------------
+------------ ADDITIONAL LEMMAS --------------
+---------------------------------------------
 
-lemma-za-r : {Γ Γ' : Ctx} → (ρ : Ren Γ Γ') → (γ' : ⟦ Γ' ⟧ᵉ) → ∀ {A : Ty} {a : ⟦ A ⟧ᵗ} → ⟦ S ∘ ρ ⟧ʳ (γ' , a) `≡ ⟦ ρ ⟧ʳ γ'
-lemma-za-r {Γ = ∅} ρ γ' = refl
--- ⟦  S ∘ (ρ ∘ S) ⟧ʳ (γ' , a) `≡ ⟦ ρ ∘ S ⟧ʳ γ'
-lemma-za-r {Γ = Γ ,, x} ρ γ' = cong (λ f → ( f , var-aux (ρ Z) γ' )) (lemma-za-r (λ z → ρ (S z)) γ')
 
--- lemma-za-s : {Γ Γ' : Ctx} → (σ : Sub Γ Γ') → (γ' : ⟦ Γ' ⟧ᵉ) → ∀ {A : Ty} {a : ⟦ A ⟧ᵗ} → ⟦ (var ∘ S) ∘ σ ⟧ˢ (γ' , a) `≡ ⟦ {! σ  !} ⟧ˢ γ'
+-------------------
+----- Renaming
+-------------------
+
+⟦S∘ρ⟧ʳ-lemma : {Γ Γ' : Ctx} → (ρ : Ren Γ Γ') → (γ' : ⟦ Γ' ⟧ᵉ) → ∀ {A : Ty} {a : ⟦ A ⟧ᵗ} → ⟦ S ∘ ρ ⟧ʳ (γ' , a) `≡ ⟦ ρ ⟧ʳ γ'
+⟦S∘ρ⟧ʳ-lemma {Γ = ∅} ρ γ' = refl
+⟦S∘ρ⟧ʳ-lemma {Γ = Γ ,, x} ρ γ' = cong (λ f → ( f , var-aux (ρ Z) γ' )) (⟦S∘ρ⟧ʳ-lemma (ρ ∘ S) γ')
 
 ⟦id⟧ʳ-lemma : {Γ : Ctx} → (γ : ⟦ Γ ⟧ᵉ) → ⟦ id ⟧ʳ γ `≡ γ
 ⟦id⟧ʳ-lemma {Γ = ∅} γ = refl
@@ -35,7 +38,7 @@ lemma-za-r {Γ = Γ ,, x} ρ γ' = cong (λ f → ( f , var-aux (ρ Z) γ' )) (l
         (⟦ id ∘ S ⟧ʳ γ , proj₂ γ)
         ≡⟨ refl ⟩
         (⟦ S ∘ id ⟧ʳ γ , proj₂ γ)
-        ≡⟨ cong (λ f → (f , proj₂ γ)) (lemma-za-r id (proj₁ γ)) ⟩
+        ≡⟨ cong (λ f → (f , proj₂ γ)) (⟦S∘ρ⟧ʳ-lemma id (proj₁ γ)) ⟩
         (⟦ id ⟧ʳ (proj₁ γ) , proj₂ γ)
         ≡⟨ cong (λ f → (f , proj₂ γ)) (⟦id⟧ʳ-lemma (proj₁ γ)) ⟩
         (proj₁ γ , proj₂ γ)
@@ -49,7 +52,7 @@ lemma-za-r {Γ = Γ ,, x} ρ γ' = cong (λ f → ( f , var-aux (ρ Z) γ' )) (l
         ⟦ S ⟧ʳ (γ , a)
         ≡⟨ refl ⟩
         ⟦ (λ x → S (id x)) ⟧ʳ (γ , a)
-        ≡⟨ lemma-za-r id γ ⟩
+        ≡⟨ ⟦S∘ρ⟧ʳ-lemma id γ ⟩
         ⟦ id ⟧ʳ γ
         ≡⟨ ⟦id⟧ʳ-lemma γ ⟩
         γ
@@ -57,7 +60,7 @@ lemma-za-r {Γ = Γ ,, x} ρ γ' = cong (λ f → ( f , var-aux (ρ Z) γ' )) (l
 
 var-aux-lemma : {A : Ty} {Γ Γ' : Ctx} → (ρ : Ren Γ Γ') → (x : A ∈ Γ) → (γ' : ⟦ Γ' ⟧ᵉ) → var-aux (ρ x) γ' `≡ var-aux x (⟦ ρ ⟧ʳ γ')
 var-aux-lemma ρ Z γ' = refl
-var-aux-lemma ρ (S x) γ' = var-aux-lemma (λ z → ρ (S z)) x γ'
+var-aux-lemma ρ (S x) γ' = var-aux-lemma (ρ ∘ S) x γ'
 
 mutual
     lemma-ren-c : {A : Ty} {Γ Γ' : Ctx} → (ρ : Ren Γ Γ') → (M : Γ ⊢ᶜ A) → ⟦ ren-c ρ M ⟧ᶜ `≡ (⟦ M ⟧ᶜ ∘ ⟦ ρ ⟧ʳ)
@@ -85,7 +88,7 @@ mutual
                             ⟦ ren-c (exts-ren ρ) M ⟧ᶜ (γ , proj₁ v)
                             ≡⟨ cong (λ f → f (γ , proj₁ v)) (lemma-ren-c (exts-ren ρ) M) ⟩
                             (⟦ M ⟧ᶜ ∘ ⟦ exts-ren ρ ⟧ʳ) (γ , proj₁ v)
-                            ≡⟨ cong (λ f → ⟦ M ⟧ᶜ (f , proj₁ v)) (lemma-za-r ρ γ) ⟩
+                            ≡⟨ cong (λ f → ⟦ M ⟧ᶜ (f , proj₁ v)) (⟦S∘ρ⟧ʳ-lemma ρ γ) ⟩
                             ⟦ M ⟧ᶜ (⟦ ρ ⟧ʳ γ , proj₁ v)
                             ∎
 
@@ -101,7 +104,7 @@ mutual
                     ⟦ ren-c (exts-ren ρ) M ⟧ᶜ (γ , s)
                     ≡⟨ cong (λ f → f (γ , s)) (lemma-ren-c (exts-ren ρ) M) ⟩
                     (⟦ M ⟧ᶜ ∘ ⟦ exts-ren ρ ⟧ʳ) (γ , s)
-                    ≡⟨ cong (λ f → ⟦ M ⟧ᶜ (f , s)) (lemma-za-r ρ γ) ⟩
+                    ≡⟨ cong (λ f → ⟦ M ⟧ᶜ (f , s)) (⟦S∘ρ⟧ʳ-lemma ρ γ) ⟩
                     ⟦ M ⟧ᶜ (⟦ ρ ⟧ʳ γ , s)
                     ∎
 
@@ -118,14 +121,15 @@ mutual
                                                                                         ⟦ ren-c (exts-ren ρ) M ⟧ᶜ (γ' , a)
                                                                                         ≡⟨ cong (λ f → f (γ' , a)) (lemma-ren-c (exts-ren ρ) M) ⟩
                                                                                         (⟦ M ⟧ᶜ ∘ ⟦ exts-ren ρ ⟧ʳ) (γ' , a)
-                                                                                        ≡⟨ cong (λ f → ⟦ M ⟧ᶜ (f , a)) (lemma-za-r ρ γ') ⟩
+                                                                                        ≡⟨ cong (λ f → ⟦ M ⟧ᶜ (f , a)) (⟦S∘ρ⟧ʳ-lemma ρ γ') ⟩
                                                                                         ⟦ M ⟧ᶜ (⟦ ρ ⟧ʳ γ' , a)
                                                                                         ∎)))
 
 
---------------------------------------------------------------------------------------------------------
--- Substitution 
--- 
+-------------------
+----- Substitution
+-------------------
+
 var-aux-lemma-s : {Γ Γ' : Ctx} {A : Ty} → (γ' : ⟦ Γ' ⟧ᵉ) → (σ : Sub Γ Γ') → (x : A ∈ Γ) → ⟦ σ x ⟧ᵛ γ' `≡ var-aux x (⟦ σ ⟧ˢ γ')
 var-aux-lemma-s γ' σ Z = refl
 var-aux-lemma-s γ' σ (S x) = var-aux-lemma-s γ' (λ z → σ (S z)) x
@@ -143,16 +147,15 @@ var-aux-lemma-s γ' σ (S x) = var-aux-lemma-s γ' (λ z → σ (S z)) x
                 ≡⟨ cong (λ f → ⟦ σ Z ⟧ᵛ f) ⟦S⟧ʳ-lema ⟩
                 ⟦ σ Z ⟧ᵛ γ
                 ∎
-                
-⟦var-id⟧ˢ-lemma : {Γ : Ctx} → (γ : ⟦ Γ ⟧ᵉ) → ⟦ var ⟧ˢ γ `≡ γ
-⟦var-id⟧ˢ-lemma {Γ = ∅} γ = refl
-⟦var-id⟧ˢ-lemma {Γ = Γ ,, x} γ = 
-    -- dokazujem: (⟦ (λ x₁ → var (S x₁)) ⟧ˢ γ , proj₂ γ) `≡ γ
+              
+⟦var⟧ˢ≡id-lemma : {Γ : Ctx} → (γ : ⟦ Γ ⟧ᵉ) → ⟦ var ⟧ˢ γ `≡ γ
+⟦var⟧ˢ≡id-lemma {Γ = ∅} γ = refl
+⟦var⟧ˢ≡id-lemma {Γ = Γ ,, x} γ = 
     begin
         (⟦ var ∘ S ⟧ˢ γ , proj₂ γ)
         ≡⟨ cong (λ f → (f , proj₂ γ)) (⟦exts-sub∘S⟧ˢ-lemma var (proj₁ γ)) ⟩
         ⟦ var ⟧ˢ (proj₁ γ) , proj₂ γ
-        ≡⟨ cong (λ f → (f , proj₂ γ)) (⟦var-id⟧ˢ-lemma (proj₁ γ)) ⟩
+        ≡⟨ cong (λ f → (f , proj₂ γ)) (⟦var⟧ˢ≡id-lemma (proj₁ γ)) ⟩
         γ
         ∎
 
@@ -220,11 +223,11 @@ mutual
 
 
 
-------------------------------------------------------------------------------------------------------------
-        
+     
 -----------------------------------------------------------------
------------- SOUNDNESS ------------------------------------------
+-------------------------- SOUNDNESS ----------------------------
 -----------------------------------------------------------------
+
 mutual
     soundness-c : {A : Ty} {Γ : Ctx} {M N : Γ ⊢ᶜ A} → Γ ⊢ᶜ M ≡ N → ⟦ M ⟧ᶜ `≡ ⟦ N ⟧ᶜ
 
@@ -259,7 +262,7 @@ mutual
                     ⟦ sub-c (σ-aux V) M ⟧ᶜ γ
                     ≡⟨ cong (λ f → f γ) (lemma-sub-c (σ-aux V) M) ⟩
                     ⟦ M ⟧ᶜ (⟦ σ-aux V ⟧ˢ γ)
-                    ≡⟨ cong (λ f →  ⟦ M ⟧ᶜ (f , ⟦ V ⟧ᵛ γ)) (⟦var-id⟧ˢ-lemma γ) ⟩
+                    ≡⟨ cong (λ f →  ⟦ M ⟧ᶜ (f , ⟦ V ⟧ᵛ γ)) (⟦var⟧ˢ≡id-lemma γ) ⟩
                     ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ)
                     ∎ )
     
@@ -268,7 +271,7 @@ mutual
             ⟦ sub-c (σ-aux V) M ⟧ᶜ γ s 
             ≡⟨ cong (λ f → f γ s) (lemma-sub-c (σ-aux V) M) ⟩
             ⟦ M ⟧ᶜ (⟦ σ-aux V ⟧ˢ γ) s
-            ≡⟨ cong (λ f → ⟦ M ⟧ᶜ (f , ⟦ V ⟧ᵛ γ) s) (⟦var-id⟧ˢ-lemma γ) ⟩
+            ≡⟨ cong (λ f → ⟦ M ⟧ᶜ (f , ⟦ V ⟧ᵛ γ) s) (⟦var⟧ˢ≡id-lemma γ) ⟩
             ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ) s
             ∎
         )))
@@ -287,16 +290,12 @@ mutual
             ... | inj₁ e = refl
             ... | inj₂ v with (⟦ N ⟧ᶜ (γ , proj₁ v) (proj₂ v))
             ...             | inj₁ e' = refl
-            -- ⟦ O ⟧ᶜ (γ , proj₁ v') (proj₂ v') `≡ ⟦ ren-c (exts-ren S) O ⟧ᶜ ((γ , proj₁ v) , proj₁ v') (proj₂ v')
             ...             | inj₂ v' = sym (begin
                                                 ⟦ ren-c (exts-ren S) O ⟧ᶜ ((γ , proj₁ v) , proj₁ v') (proj₂ v')
                                                 ≡⟨ cong (λ f → f ((γ , proj₁ v) , proj₁ v') (proj₂ v')) (lemma-ren-c (exts-ren S) O) ⟩
                                                 (⟦ O ⟧ᶜ (⟦ exts-ren S ⟧ʳ ((γ , proj₁ v) , proj₁ v'))) (proj₂ v')
-                                                -- uporabil sem pravilo: ⟦ (λ x → S (ρ x)) ⟧ʳ (γ' , a) `≡ ⟦ ρ ⟧ʳ γ'
-                                                -- dokazujem : ⟦ O ⟧ᶜ (⟦ (λ x → S (S x)) ⟧ʳ ((γ , proj₁ v) , proj₁ v') , proj₁ v') (proj₂ v')
-                                                ≡⟨ cong (λ f →  (⟦ O ⟧ᶜ (f , proj₁ v') ) (proj₂ v')) (lemma-za-r S ((γ , proj₁ v))) ⟩
+                                                ≡⟨ cong (λ f →  (⟦ O ⟧ᶜ (f , proj₁ v') ) (proj₂ v')) (⟦S∘ρ⟧ʳ-lemma S ((γ , proj₁ v))) ⟩
                                                 (⟦ O ⟧ᶜ ( ⟦ S ⟧ʳ (γ , proj₁ v) , proj₁ v') ) (proj₂ v')
-                                                -- uporabil pravilo: ⟦ S ⟧ʳ (γ , a) `≡ γ
                                                 ≡⟨ cong (λ f → (⟦ O ⟧ᶜ (f , proj₁ v') ) (proj₂ v')) ⟦S⟧ʳ-lema ⟩
                                                 (⟦ O ⟧ᶜ (γ , proj₁ v') ) (proj₂ v')
                                                 ≡⟨ refl ⟩
@@ -309,14 +308,11 @@ mutual
             let-get-aux : (γ : ⟦ Γ ⟧ᵉ) → (s : State) → ⟦ `let `get M `in N ⟧ᶜ γ s `≡ ⟦ `get (`let M `in ren-c (exts-ren wk-ren) N) ⟧ᶜ γ s
             let-get-aux γ s with (⟦ M ⟧ᶜ (γ , s) s)
             ... | inj₁ e = refl
-            -- dokzaujem : ⟦ ren-c (exts-ren S) N ⟧ᶜ ((γ , s) , proj₁ v) (proj₂ v) `≡ ⟦ N ⟧ᶜ (γ , proj₁ v) (proj₂ v)
             ... | inj₂ v = sym (begin
                                     ⟦ ren-c (exts-ren S) N ⟧ᶜ ((γ , s) , proj₁ v) (proj₂ v)
                                     ≡⟨ cong (λ f → f ((γ , s) , proj₁ v) (proj₂ v)) (lemma-ren-c (exts-ren S) N) ⟩
                                     (⟦ N ⟧ᶜ ((⟦ exts-ren S ⟧ʳ) ((γ , s) , proj₁ v))) (proj₂ v)
-                                    -- uporabil sem pravilo: ⟦ (λ x → S (ρ x)) ⟧ʳ (γ' , a) `≡ ⟦ ρ ⟧ʳ γ'
-                                    -- dokazujem : ⟦ N ⟧ᶜ (⟦ (λ x → S (S x)) ⟧ʳ ((γ , s) , proj₁ v) , proj₁ v) (proj₂ v)
-                                    ≡⟨ cong (λ f → ⟦ N ⟧ᶜ (f , proj₁ v) (proj₂ v)) (lemma-za-r S (γ , s)) ⟩
+                                    ≡⟨ cong (λ f → ⟦ N ⟧ᶜ (f , proj₁ v) (proj₂ v)) (⟦S∘ρ⟧ʳ-lemma S (γ , s)) ⟩
                                     ⟦ N ⟧ᶜ (⟦ S ⟧ʳ (γ , s) , proj₁ v) (proj₂ v)
                                     ≡⟨ cong (λ f → ⟦ N ⟧ᶜ (f , proj₁ v) (proj₂ v)) ⟦S⟧ʳ-lema ⟩
                                     ⟦ N ⟧ᶜ (γ , proj₁ v) (proj₂ v)
@@ -330,11 +326,11 @@ mutual
                     ⟦ sub-c (σ-aux V) M ⟧ᶜ γ
                     ≡⟨ cong (λ f → f γ) (lemma-sub-c (σ-aux V) M) ⟩
                     ⟦ M ⟧ᶜ ( ⟦ σ-aux V ⟧ˢ γ )
-                    ≡⟨ cong (λ f → ⟦ M ⟧ᶜ (f , ⟦ V ⟧ᵛ γ)) (⟦var-id⟧ˢ-lemma γ) ⟩
+                    ≡⟨ cong (λ f → ⟦ M ⟧ᶜ (f , ⟦ V ⟧ᵛ γ)) (⟦var⟧ˢ≡id-lemma γ) ⟩
                     ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ)
                     ∎) 
 
-    soundness-c (GET {M = M})  = fun-ext (λ γ → fun-ext (λ s → cong (λ f → f s) (begin
+    soundness-c (η-get {M = M})  = fun-ext (λ γ → fun-ext (λ s → cong (λ f → f s) (begin
                                                                                 ⟦ ren-c S M ⟧ᶜ (γ , s)
                                                                                 ≡⟨ cong (λ f → f (γ , s)) (lemma-ren-c S M) ⟩
                                                                                 (⟦ M ⟧ᶜ ∘ ⟦ S ⟧ʳ) (γ , s)
@@ -347,25 +343,6 @@ mutual
     soundness-c raise-put = refl
     soundness-c raise-get = refl
     soundness-c raise-let = refl
-
-    -- soundness-c (return-left {V = V} {M = M}) = fun-ext (λ γ → fun-ext (λ s → sym (begin
-    --                                                                             ⟦ sub-c (σ-aux V) M ⟧ᶜ γ s
-    --                                                                             ≡⟨ cong (λ f → f γ s) (lemma-sub-c (σ-aux V) M) ⟩
-    --                                                                             (⟦ M ⟧ᶜ (⟦ σ-aux V ⟧ˢ γ)) s
-    --                                                                             ≡⟨ cong (λ f →  ⟦ M ⟧ᶜ (f , ⟦ V ⟧ᵛ γ) s) (⟦var-id⟧ˢ-lemma γ) ⟩
-    --                                                                             ⟦ M ⟧ᶜ (γ , ⟦ V ⟧ᵛ γ) s
-    --                                                                             ∎)))
-
-    -- soundness-c {Γ = Γ} {N = N} return-right = fun-ext (λ γ → fun-ext (λ s → return-right-aux γ s))
-    --     where
-    --         return-right-aux : (γ : ⟦ Γ ⟧ᵉ) → (s : State) → letin-aux N (return (var Z)) γ s `≡ ⟦ N ⟧ᶜ γ s
-    --         return-right-aux γ s with ⟦ N ⟧ᶜ γ s
-    --         ... | inj₁ e = refl
-    --         ... | inj₂ v = refl
-
-
-    
-
 
 
 
@@ -397,7 +374,7 @@ mutual
                     ⟦ V ⟧ᵛ (⟦ var ∘ S ⟧ˢ (γ , a))
                     ≡⟨ cong (λ f → ⟦ V ⟧ᵛ f) (⟦exts-sub∘S⟧ˢ-lemma var γ) ⟩
                     ⟦ V ⟧ᵛ (⟦ var ⟧ˢ γ)
-                    ≡⟨ cong (λ f → ⟦ V ⟧ᵛ f) (⟦var-id⟧ˢ-lemma γ) ⟩
+                    ≡⟨ cong (λ f → ⟦ V ⟧ᵛ f) (⟦var⟧ˢ≡id-lemma γ) ⟩
                     ⟦ V ⟧ᵛ γ
                     ∎
                 )
