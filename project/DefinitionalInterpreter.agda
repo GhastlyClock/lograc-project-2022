@@ -1,6 +1,5 @@
 module DefinitionalInterpreter where
 
-open import Data.Bool using (true; false; Bool)
 open import Data.Product using (_×_; _,_; proj₁; proj₂)
 open import Agda.Builtin.Unit 
 
