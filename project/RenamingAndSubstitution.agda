@@ -36,8 +36,6 @@ module Renaming where
         ren-v ρ (var x) = var (ρ x)
         ren-v ρ (const x) = const x
         ren-v ρ ⋆ = ⋆
-        ren-v ρ `true = `true
-        ren-v ρ `false = `false
         ren-v ρ (`λ M) = `λ (ren-c (exts-ren ρ) M)
 
         ren-c : {Γ Γ' : Ctx} → Ren Γ Γ' → {A : Ty} → Γ ⊢ᶜ A → Γ' ⊢ᶜ A
@@ -74,8 +72,6 @@ module Substitution where
         sub-v σ (var x) = σ x
         sub-v σ (const x) = const x
         sub-v σ ⋆ = ⋆
-        sub-v σ `true = `true
-        sub-v σ `false = `false
         sub-v σ (`λ M) = `λ (sub-c (exts-sub σ) M)
 
         sub-c : {Γ Γ' : Ctx} → Sub Γ Γ' → {A : Ty} → Γ ⊢ᶜ A → Γ' ⊢ᶜ A

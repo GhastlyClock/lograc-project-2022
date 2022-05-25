@@ -71,8 +71,6 @@ mutual
             lemma-ren-c-return-aux γ' (var x) = var-aux-lemma ρ x γ'
             lemma-ren-c-return-aux γ' (const x) = refl
             lemma-ren-c-return-aux γ' ⋆ = refl
-            lemma-ren-c-return-aux γ' `true = refl
-            lemma-ren-c-return-aux γ' `false = refl
             lemma-ren-c-return-aux γ' (`λ M) = fun-ext (λ a → fun-ext (λ s → cong (λ f → (((f γ') a) s)) (lemma-ren-v ρ (`λ M))))
 
     lemma-ren-c {A = A} {Γ = Γ} {Γ' = Γ'} ρ (`let V `in M) = fun-ext (λ γ → fun-ext (λ s → lemma-ren-c-letin-aux γ s))
@@ -115,8 +113,6 @@ mutual
     lemma-ren-v ρ (var x) = fun-ext λ γ → var-aux-lemma ρ x γ
     lemma-ren-v ρ (const x) = refl
     lemma-ren-v ρ ⋆ = refl
-    lemma-ren-v ρ `true = refl
-    lemma-ren-v ρ `false = refl
     lemma-ren-v {A = A} {Γ = Γ} {Γ' = Γ'} ρ (`λ M) = fun-ext (λ γ' → fun-ext (λ a → (begin
                                                                                         ⟦ ren-c (exts-ren ρ) M ⟧ᶜ (γ' , a)
                                                                                         ≡⟨ cong (λ f → f (γ' , a)) (lemma-ren-c (exts-ren ρ) M) ⟩
@@ -211,8 +207,6 @@ mutual
     lemma-sub-v σ (var x) = fun-ext (λ γ' → var-aux-lemma-s γ' σ x)
     lemma-sub-v σ (const x) = refl
     lemma-sub-v σ ⋆ = refl
-    lemma-sub-v σ `true = refl
-    lemma-sub-v σ `false = refl
     lemma-sub-v {A = A} {Γ = Γ} {Γ' = Γ'} σ (`λ M) = fun-ext (λ γ → fun-ext (λ a → (begin
                                                                                         ⟦ sub-c (exts-sub σ) M ⟧ᶜ (γ , a)
                                                                                         ≡⟨ cong (λ f → f (γ , a)) (lemma-sub-c (exts-sub σ) M) ⟩

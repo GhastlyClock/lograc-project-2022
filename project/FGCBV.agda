@@ -5,8 +5,7 @@ open import ESMonad using (State; Exceptions)
 
 -- Types of lambda calculus:
 data Ty : Set where
-    unit : Ty                -- unit
-    bool : Ty                -- bool   
+    unit : Ty                -- unit  
     _⇒_ : Ty → Ty → Ty    -- function
     TState : Ty              -- State
 
@@ -41,14 +40,6 @@ mutual
     ⋆ : {Γ : Ctx} → 
       --------
       Γ ⊢ᵛ unit
-
-    `true : {Γ : Ctx} →  
-      --------
-      Γ ⊢ᵛ bool
-
-    `false : {Γ : Ctx} →  
-      --------
-      Γ ⊢ᵛ bool
 
     `λ : {Γ : Ctx} {A B : Ty} → 
       Γ ,, A ⊢ᶜ B →

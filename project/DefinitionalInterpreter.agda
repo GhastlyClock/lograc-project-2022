@@ -16,7 +16,6 @@ open import RenamingAndSubstitution
 
 ⟦_⟧ᵗ : Ty → Set
 ⟦ unit ⟧ᵗ = ⊤
-⟦ bool ⟧ᵗ = Bool
 ⟦ A ⇒ B ⟧ᵗ = ⟦ A ⟧ᵗ → T ⟦ B ⟧ᵗ
 ⟦ TState ⟧ᵗ = State
 
@@ -35,8 +34,6 @@ mutual
     ⟦ var x ⟧ᵛ γ = var-aux x γ
     ⟦ const x ⟧ᵛ γ = x
     ⟦ ⋆ ⟧ᵛ γ = tt
-    ⟦ `true ⟧ᵛ γ = true
-    ⟦ `false ⟧ᵛ γ = false
     ⟦ `λ e ⟧ᵛ γ = λ x → ⟦ e ⟧ᶜ (γ , x)
 
 
