@@ -38,18 +38,12 @@ mutual
 
     ⟦_⟧ᶜ : {Γ : Ctx} {A : Ty} → Γ ⊢ᶜ A → ⟦ Γ ⟧ᵉ → T (⟦ A ⟧ᵗ)
     ⟦ return V ⟧ᶜ γ = η (⟦ V ⟧ᵛ γ)
-    ⟦ `let M `in N ⟧ᶜ γ = λ s → letin-aux M N γ s
+    ⟦ `let M `in N ⟧ᶜ γ = ⟦ M ⟧ᶜ γ >>= (λ x y → ⟦ N ⟧ᶜ (γ , x) y)
     ⟦ app V W ⟧ᶜ γ = ((⟦ V ⟧ᵛ γ) (⟦ W ⟧ᵛ γ))
     ⟦ `get M ⟧ᶜ γ = get λ s → ⟦ M ⟧ᶜ (γ , s)
     ⟦ `put V M ⟧ᶜ γ = put (⟦ V ⟧ᵛ γ) (⟦ M ⟧ᶜ γ)
     ⟦ `raise e ⟧ᶜ γ = raise e
     
-    letin-aux : {Γ : Ctx} {A B : Ty} → Γ ⊢ᶜ A → Γ ,, A ⊢ᶜ B → ⟦ Γ ⟧ᵉ → State → Exceptions ⊎ (⟦ B ⟧ᵗ × State)
-    letin-aux M N γ s with (⟦ M ⟧ᶜ γ) s
-    ... | inj₁ e = inj₁ e
-    ... | inj₂ v = ⟦ N ⟧ᶜ (γ , proj₁ v) (proj₂ v)
-
-
 
 ⟦_⟧ʳ : {Γ Γ' : Ctx} → Ren Γ Γ' → ⟦ Γ' ⟧ᵉ → ⟦ Γ ⟧ᵉ
 ⟦_⟧ʳ {Γ = ∅} {Γ' = Γ'} ρ γ = tt

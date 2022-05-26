@@ -34,6 +34,11 @@ record Monad {l} : Set (lsuc l) where
     >>=-assoc : {X Y Z : Set l} (c : T X) (f : X → T Y) (g : Y → T Z)
               → ((c >>= f) >>= g) ≡ c >>= (λ x → f x >>= g)
 
+_>>=-aux_ : {l : Level} {X : Set l} {Y : Set l} → (State → Exceptions ⊎ X × State) → (X → State → Exceptions ⊎ Y × State) → State  → (Exceptions ⊎ Y × State)
+_>>=-aux_ x f s with (x s)
+... | inj₁ e = inj₁ e
+... | inj₂ y = f (proj₁ y) (proj₂ y)
+
 ESMonad : Monad {lzero}
 ESMonad = record
   { T = λ X → State →  Exceptions ⊎ (X × State)
@@ -44,12 +49,6 @@ ESMonad = record
   ; >>=-assoc = λ c f g → fun-ext (>>=-assoc-aux c f g)
   }
   where
-    _>>=-aux_ : {l : Level} {X : Set l} {Y : Set l} → (State → Exceptions ⊎ X × State) → (X → State → Exceptions ⊎ Y × State) → State  → (Exceptions ⊎ Y × State)
-    _>>=-aux_ x f s with (x s)
-    ... | inj₁ e = inj₁ e
-    ... | inj₂ y = f (proj₁ y) (proj₂ y)
-
-
     η-right-aux : {l : Level} {X : Set l} → (m : State → Exceptions ⊎ X × State) →  (s : State) → (m >>=-aux (λ x s₁ → inj₂ (x , s₁))) s ≡ m s
     η-right-aux m s with (m s)
     ... | inj₁ e = refl

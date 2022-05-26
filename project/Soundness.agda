@@ -279,7 +279,7 @@ mutual
             
     soundness-c {A = A} {Γ = Γ} (let-assoc {A = B} {B = C} {M = M} {N = N} {O = O}) = fun-ext (λ γ → fun-ext (λ s → let-assoc-aux γ s))
         where
-            let-assoc-aux : (γ : ⟦ Γ ⟧ᵉ) → (s : State) →  letin-aux (`let M `in N) O γ s `≡ letin-aux M (`let N `in ren-c (exts-ren S) O) γ s
+            let-assoc-aux : (γ : ⟦ Γ ⟧ᵉ) → (s : State) → ⟦ `let `let M `in N `in O ⟧ᶜ γ s `≡ ⟦ `let M `in (`let N `in ren-c (exts-ren S) O) ⟧ᶜ γ s
             let-assoc-aux γ s with (⟦ M ⟧ᶜ γ s)
             ... | inj₁ e = refl
             ... | inj₂ v with (⟦ N ⟧ᶜ (γ , proj₁ v) (proj₂ v))
