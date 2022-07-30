@@ -25,7 +25,7 @@ $$\Gamma \vdash^{v} V : A, \ \ \ \ \ \ \ \Gamma \vdash^{c} M : A $$
 ## Denotational semantics
 
 For every type $A$ let's define set $[[ \  A \ ]] $:
-$$[[ \  unit \ ]]  = \{tt\}, \quad [[ \  A \to B \ ]]  = [[ \  B \ ]] ^{[[ \  A \ ]] }, \quad [[ \  TState \ ]]  = \mathbb{S}$$
+$$[[ \  unit \ ]]  = \{tt\}, \quad [[ \  A \to B \ ]]  = T [[ \  B \ ]] ^{[[ \  A \ ]] }, \quad [[ \  TState \ ]]  = \mathbb{S}$$
 
 We define interpretation of context as follows:
 $$[[ \  \Gamma \ ]]  = [[ \  x_1 : A_1, \ldots, x_n : A_n \ ]]  = [[ \  A_1 \ ]]  \times \cdots \times [[ \  A_n \ ]]$$
@@ -34,10 +34,10 @@ $$[[ \  \Gamma \ ]]  = [[ \  x_1 : A_1, \ldots, x_n : A_n \ ]]  = [[ \  A_1 \ ]]
 
 Denotational semantics of values is defined as function: $$[[ \  \Gamma \vdash^v V : A \ ]]  : [[ \  \Gamma \ ]]  \to [[ \  A \ ]] ,$$
 where:
-* $[[ \  x_1 : A_1, \ldots, x_n : A_n \vdash^v var \, x_i : A_i \ ]]  (a_1, \ldots, a_m) = a_i$
+* $[[ \  x_1 : A_1, \ldots, x_n : A_n \vdash^v var \ x_i : A_i \ ]]  (a_1, \ldots, a_m) = a_i$
 * $[[ \  \Gamma \vdash^v \lambda x.M : A \to B \ ]]  (\gamma) = a \in [[ \  A \ ]]  \mapsto [[ \  \Gamma, x : A \vdash^c M : B \ ]]  (\gamma , a)$
 * $[[ \  \Gamma \vdash^v const \ s : A \ ]]  (\gamma) = s $
-* $[[ \  \Gamma \vdash^v \star : A \ ]]  (\gamma) = tt$
+* $[[ \  \Gamma \vdash^v \star : unit  \ ]]  (\gamma) = tt$
 
 ## Monad
 
@@ -55,12 +55,12 @@ $$T \ X \ = \ \mathbb{S} \rightarrow \ \mathbb{E} \ + \ (\mathbb{S} \ \times \ X
 
 Denotational semantics of computations is defined as function $$[[ \  \Gamma \vdash^c M : A \ ]]  : [[ \  \Gamma \ ]]  \to T [[ \  A \ ]] ,$$
 where:
-* $[[ \  \Gamma \vdash^c return\, V : A \ ]]  (\gamma) = \eta\, ([[ \  \Gamma \vdash^v V : A \ ]]  (\gamma)) $
-* $[[ \  \Gamma \vdash^c let\ x = M \ in \ N  : A \to B \ ]]  (\gamma) =  let'\ x = [[ \  \Gamma \vdash^c M : B \ ]]  (\gamma) \ in' \ [[ \  \Gamma, x : B \vdash^c N : A \ ]]  (\gamma, x)$
-* $[[ \  \Gamma \vdash^c app\, M\, N : B \ ]]  (\gamma) = ([[ \  \Gamma \vdash^c M : A \to B \ ]]  (\gamma)) ([[ \  \Gamma \vdash^c N : A \ ]]  (\gamma))$
+* $[[ \  \Gamma \vdash^c return \ V : A \ ]]  (\gamma) = \eta \ ([[ \  \Gamma \vdash^v V : A \ ]]  (\gamma)) $
+* $[[ \  \Gamma \vdash^c let\ x = M \ in \ N  : A \to B \ ]]  (\gamma) = [[ \  \Gamma \vdash^c M : A \ ]] (\gamma)  \gg= (y \in TState \mapsto ( x \in [[ \ A \ ]] \mapsto [[ \  \Gamma \vdash^c N : B \ ]] (\gamma, x) ) \ y )  $
+* $[[ \  \Gamma \vdash^c app \ M \ N : B \ ]]  (\gamma) = ([[ \  \Gamma \vdash^c M : A \to B \ ]]  (\gamma)) \ ([[ \  \Gamma \vdash^c N : A \ ]]  (\gamma))$
 * $[[ \  \Gamma \vdash^c get \ x.M : A \ ]]  (\gamma) = get' (\lambda s \to [[ \  \Gamma, x : TState \vdash^c M : A \ ]]  (\gamma, s)) $
-* $[[ \  \Gamma \vdash^c put \; V \; M : A \ ]]  (\gamma) =  put'\, ([[ \  \Gamma \vdash^v V : TState \ ]]  (\mu)) \ ([[ \  \Gamma \vdash^c M : A \ ]]  (\gamma))$
-* $[[ \  \Gamma \vdash^c raise \; e : A \ ]]  (\gamma) = raise' \ e $
+* $[[ \  \Gamma \vdash^c put \ V \ M : A \ ]]  (\gamma) =  put' \ ([[ \  \Gamma \vdash^v V : TState \ ]]  (\mu)) \ ([[ \  \Gamma \vdash^c M : A \ ]]  (\gamma))$
+* $[[ \  \Gamma \vdash^c raise \ e : A \ ]]  (\gamma) = raise' \ e $
 
 ## Equtional theory
 
